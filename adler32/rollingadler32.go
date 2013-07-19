@@ -16,7 +16,7 @@ package adler32
 
 import (
 	"container/ring"
-	"hash"
+	"rollinghash"
 )
 
 const (
@@ -56,8 +56,9 @@ func (d *digest) Reset() {
 }
 
 // New returns a new hash.Hash32 computing the Adler-32 checksum.
-func New(windowSize int) hash.Hash32 {
+func New(windowSize int) rollinghash.RollingHash32 {
 	d := new(digest)
+    d.windowSize = windowSize
 	d.Reset()
 	return d
 }
@@ -99,6 +100,7 @@ func (d *digest) Sum(in []byte) []byte {
 // Checksum returns the Adler-32 checksum of data.
 func Checksum(data []byte) uint32 {
 	d := new(digest)
+    d.windowSize = len(data)
 	d.Reset()
 
 	for _, v := range data {
