@@ -16,7 +16,7 @@ package adler32
 
 import (
 	"container/ring"
-	"rollinghash"
+	"github.com/Logibox/rollinghash"
 )
 
 const (
@@ -42,8 +42,8 @@ type digest struct {
 
 func (d *digest) Reset() {
 	d.buffer = ring.New(d.windowSize)
-    d.s1 = 1
-    d.s2 = 0
+	d.s1 = 1
+	d.s2 = 0
 
 	for i := 0; i < d.windowSize; i++ {
 		d.buffer.Value = byte(0)
@@ -58,7 +58,7 @@ func (d *digest) Reset() {
 // New returns a new hash.Hash32 computing the Adler-32 checksum.
 func New(windowSize int) rollinghash.RollingHash32 {
 	d := new(digest)
-    d.windowSize = windowSize
+	d.windowSize = windowSize
 	d.Reset()
 	return d
 }
@@ -76,11 +76,11 @@ func (d *digest) Update(inByte byte) {
 	d.buffer.Value = inByte
 	d.buffer = d.buffer.Next()
 
-    // update the hash
+	// update the hash
 	d.s1 = (d.s2 + uint32(inByte)) - uint32(outByte)
 	d.s2 = (d.s2 + d.s1) - (d.removeLookup[outByte]) - 1
-    d.s1 %= mod
-    d.s2 %= mod
+	d.s1 %= mod
+	d.s2 %= mod
 }
 
 func (d *digest) Write(p []byte) (nn int, err error) {
@@ -90,7 +90,7 @@ func (d *digest) Write(p []byte) (nn int, err error) {
 	return len(p), nil
 }
 
-func (d *digest) Sum32() uint32 { return d.s2 << 16 | d.s1}
+func (d *digest) Sum32() uint32 { return d.s2<<16 | d.s1 }
 
 func (d *digest) Sum(in []byte) []byte {
 	s := d.Sum32()
@@ -100,7 +100,7 @@ func (d *digest) Sum(in []byte) []byte {
 // Checksum returns the Adler-32 checksum of data.
 func Checksum(data []byte) uint32 {
 	d := new(digest)
-    d.windowSize = len(data)
+	d.windowSize = len(data)
 	d.Reset()
 
 	for _, v := range data {

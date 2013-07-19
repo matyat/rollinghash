@@ -1,8 +1,10 @@
+// Copyright 2013 Mathew Yates
+
 package rabinkarp
 
 import (
 	"container/ring"
-	"rollinghash"
+	"github.com/Logibox/rollinghash"
 )
 
 type digest struct {
@@ -70,11 +72,14 @@ func (d *digest) Write(p []byte) (nn int, err error) {
 func (d *digest) Sum32() uint32 {
 	if d.hashSize <= 32 {
 		return uint32(d.value)
+	} else {
+		return 0
 	}
 }
 
 func (d *digest) Sum64() uint64 { return d.value }
 
+// appends four bytes if the hash will fit, else 8 bytes
 func (d *digest) Sum(in []byte) []byte {
 	if d.hashSize <= 32 {
 		s := d.Sum32()
