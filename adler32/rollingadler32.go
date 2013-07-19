@@ -1,3 +1,5 @@
+// Copyright 2013 Mathew Yates
+
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -10,7 +12,7 @@
 //	are done modulo 65521. s1 is initialized to 1, s2 to zero.  The
 //	Adler-32 checksum is stored as s2*65536 + s1 in most-
 //	significant-byte first (network) order.
-package rollingadler32
+package adler32
 
 import (
 	"container/ring"
@@ -31,17 +33,17 @@ const Size = 4
 
 // digest represents the partial evaluation of a checksum.
 // The low 16 bits are s1, the high 16 bits are s2.
-
 type digest struct {
-	value        uint32
+	s1, s2       uint32
 	windowSize   int
 	removeLookup [256]uint32
 	buffer       *ring.Ring
 }
 
 func (d *digest) Reset() {
-	d.value = 1
 	d.buffer = ring.New(d.windowSize)
+    d.s1 = 1
+    d.s2 = 0
 
 	for i := 0; i < d.windowSize; i++ {
 		d.buffer.Value = byte(0)
@@ -73,12 +75,11 @@ func (d *digest) Update(inByte byte) {
 	d.buffer.Value = inByte
 	d.buffer = d.buffer.Next()
 
-	s1, s2 := uint32(d.value&0xffff), uint32(d.value>>16)
-
-	s1 = (s2 + uint32(inByte)) - uint32(outByte)
-	s2 = (s2 + s1) - (d.removeLookup[outByte]) - 1
-
-	d.value = (s2<<16 | s1)
+    // update the hash
+	d.s1 = (d.s2 + uint32(inByte)) - uint32(outByte)
+	d.s2 = (d.s2 + d.s1) - (d.removeLookup[outByte]) - 1
+    d.s1 %= mod
+    d.s2 %= mod
 }
 
 func (d *digest) Write(p []byte) (nn int, err error) {
@@ -88,10 +89,10 @@ func (d *digest) Write(p []byte) (nn int, err error) {
 	return len(p), nil
 }
 
-func (d *digest) Sum32() uint32 { return d.value }
+func (d *digest) Sum32() uint32 { return d.s2 << 16 | d.s1}
 
 func (d *digest) Sum(in []byte) []byte {
-	s := uint32(d.value)
+	s := d.Sum32()
 	return append(in, byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
 }
 
@@ -104,5 +105,5 @@ func Checksum(data []byte) uint32 {
 		d.Update(v)
 	}
 
-	return d.value
+	return d.Sum32()
 }
