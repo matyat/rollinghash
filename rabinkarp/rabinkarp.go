@@ -29,14 +29,14 @@ func (d *digest) Reset() {
 	}
 
 	// create the nth prime look up table
-	for i := 0; i < 256; i++ {
-		d.removeLookup[i] = uint64(i * primeNthPower)
+	for i := uint64(0); i < 256; i++ {
+		d.removeLookup[i] = i * primeNthPower
 	}
 
-	d.mask = (1 << d.hashSize) - 1
+	d.mask = (1 << uint64(d.hashSize)) - 1
 }
 
-func New(windowSize, hashSize, prime int) rollinghash.RollingHash {
+func New(windowSize, hashSize, prime int) rollinghash.RollingHash64 {
 	d := new(digest)
 	d.windowSize = windowSize
 	d.hashSize = hashSize
@@ -49,7 +49,7 @@ func (d *digest) Size() int { return d.hashSize }
 
 func (d *digest) BlockSize() int { return 1 }
 
-func (d *digest) Update(inByte byte) {
+func (d *digest) AddByte(inByte byte) {
 	// Replace the byte leaving the buffer with the incoming
 	// byte and advance the buffer
 	outByte := d.buffer.Value.(byte)
@@ -69,29 +69,20 @@ func (d *digest) Write(p []byte) (nn int, err error) {
 	return len(p), nil
 }
 
-func (d *digest) Sum32() uint32 {
-	if d.hashSize <= 32 {
-		return uint32(d.value)
-	} else {
-		return 0
-	}
-}
-
 func (d *digest) Sum64() uint64 { return d.value }
 
 // appends four bytes if the hash will fit, else 8 bytes
 func (d *digest) Sum(in []byte) []byte {
+	s := d.Sum64()
 	if d.hashSize <= 32 {
-		s := d.Sum32()
 		return append(in, byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
 	} else {
-		s := d.Sum64()
 		return append(in, byte(s>>56), byte(s>>48), byte(s>>40), byte(s>>32), byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
 	}
 }
 
 // Checksum returns the rabin checksum of data.
-func Checksum(data []byte, prime int) uint32 {
+func Checksum(data []byte, prime int) uint64 {
 	d := new(digest)
 	d.windowSize = len(data)
 	d.prime = uint64(prime)
@@ -101,5 +92,5 @@ func Checksum(data []byte, prime int) uint32 {
 		d.Update(v)
 	}
 
-	return d.Sum32()
+	return d.Sum64()
 }

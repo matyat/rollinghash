@@ -69,7 +69,7 @@ func (d *digest) BlockSize() int { return 1 }
 
 // Add byte p to the digest and remove the byte
 // leaving the window
-func (d *digest) Update(inByte byte) {
+func (d *digest) AddByte(inByte byte) {
 	// Replace the byte leaving the buffer with the incoming
 	// byte and advance the buffer
 	outByte := d.buffer.Value.(byte)

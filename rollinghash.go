@@ -10,7 +10,7 @@ type RollingHash interface {
 	hash.Hash
 	// update the hash with a new byte
 	// internally a byte is drop from the buffer
-	Update(inByte byte)
+	AddByte(inByte byte)
 }
 
 type RollingHash32 interface {
