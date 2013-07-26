@@ -47,6 +47,8 @@ func New(windowSize, hashSize, prime int) rollinghash.RollingHash64 {
 
 func (d *digest) Size() int { return d.hashSize }
 
+func (d *digest) WindowSize() int { return d.windowSize }
+
 func (d *digest) BlockSize() int { return 1 }
 
 func (d *digest) AddByte(inByte byte) {
@@ -62,9 +64,15 @@ func (d *digest) AddByte(inByte byte) {
 	d.value &= d.mask
 }
 
+func (d *digest) AddBytes(inBytes []byte) {
+	for _, b := range inBytes {
+		d.AddByte(b)
+	}
+}
+
 func (d *digest) Write(p []byte) (nn int, err error) {
 	for _, v := range p {
-		d.Update(v)
+		d.AddByte(v)
 	}
 	return len(p), nil
 }
@@ -89,7 +97,7 @@ func Checksum(data []byte, prime int) uint64 {
 	d.Reset()
 
 	for _, v := range data {
-		d.Update(v)
+		d.AddByte(v)
 	}
 
 	return d.Sum64()

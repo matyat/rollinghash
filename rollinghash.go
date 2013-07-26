@@ -9,8 +9,12 @@ import (
 type RollingHash interface {
 	hash.Hash
 	// update the hash with a new byte
-	// internally a byte is drop from the buffer
-	AddByte(inByte byte)
+	// internally a byte is dropped from the buffer
+	AddByte(byte)
+	AddBytes([]byte)
+
+	// Size of the interal window/buffer
+	WindowSize() int
 }
 
 type RollingHash32 interface {
