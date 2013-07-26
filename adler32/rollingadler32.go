@@ -65,6 +65,8 @@ func New(windowSize int) rollinghash.RollingHash32 {
 
 func (d *digest) Size() int { return Size }
 
+func (d *digest) WindowSize() int { return d.windowSize }
+
 func (d *digest) BlockSize() int { return 1 }
 
 // Add byte p to the digest and remove the byte
@@ -83,9 +85,15 @@ func (d *digest) AddByte(inByte byte) {
 	d.s2 %= mod
 }
 
-func (d *digest) Write(p []byte) (nn int, err error) {
+func (d *digest) AddBytes(inBytes []byte) {
+	for _, b := range inBytes {
+		d.AddByte(b)
+	}
+}
+
+func (d *digest) Write(p []byte) (n int, err error) {
 	for _, v := range p {
-		d.Update(v)
+		d.AddByte(v)
 	}
 	return len(p), nil
 }
@@ -104,7 +112,7 @@ func Checksum(data []byte) uint32 {
 	d.Reset()
 
 	for _, v := range data {
-		d.Update(v)
+		d.AddByte(v)
 	}
 
 	return d.Sum32()
