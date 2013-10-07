@@ -47,7 +47,7 @@ func New(windowSize, hashSize, prime int) rollinghash.RollingHash64 {
 
 func (d *digest) Size() int { return d.hashSize }
 
-func (d *digest) WindowSize() int { return d.WindowSize }
+func (d *digest) WindowSize() int { return d.windowSize }
 
 func (d *digest) BlockSize() int { return 1 }
 
