@@ -1,5 +1,3 @@
-// Copyright 2013 Mathew Yates
-
 package rabinkarp
 
 import (
@@ -8,10 +6,10 @@ import (
 )
 
 type digest struct {
-	value, prime, mask   uint64
-	windowSize, hashSize int
-	removeLookup         [256]uint64
-	buffer               *ring.Ring
+	value, prime, mask uint64
+	windowSize         int
+	removeLookup       [256]uint64
+	buffer             *ring.Ring
 }
 
 func (d *digest) Reset() {
@@ -32,20 +30,17 @@ func (d *digest) Reset() {
 	for i := uint64(0); i < 256; i++ {
 		d.removeLookup[i] = i * primeNthPower
 	}
-
-	d.mask = (1 << uint64(d.hashSize)) - 1
 }
 
-func New(windowSize, hashSize, prime int) rollinghash.RollingHash64 {
+func New(windowSize, prime int) rollinghash.RollingHash64 {
 	d := new(digest)
 	d.windowSize = windowSize
-	d.hashSize = hashSize
 	d.prime = uint64(prime)
 	d.Reset()
 	return d
 }
 
-func (d *digest) Size() int { return d.hashSize }
+func (d *digest) Size() int { return 8 }
 
 func (d *digest) WindowSize() int { return d.windowSize }
 
@@ -61,7 +56,6 @@ func (d *digest) AddByte(inByte byte) {
 	// update the hash
 	d.value *= d.prime
 	d.value = (d.value + uint64(inByte)) - d.removeLookup[outByte]
-	d.value &= d.mask
 }
 
 func (d *digest) AddBytes(inBytes []byte) {
@@ -82,11 +76,7 @@ func (d *digest) Sum64() uint64 { return d.value }
 // appends four bytes if the hash will fit, else 8 bytes
 func (d *digest) Sum(in []byte) []byte {
 	s := d.Sum64()
-	if d.hashSize <= 32 {
-		return append(in, byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
-	} else {
-		return append(in, byte(s>>56), byte(s>>48), byte(s>>40), byte(s>>32), byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
-	}
+	return append(in, byte(s>>56), byte(s>>48), byte(s>>40), byte(s>>32), byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
 }
 
 // Checksum returns the rabin checksum of data.
