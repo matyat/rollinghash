@@ -1,4 +1,4 @@
-// Copyright 2013 Mathew Yates
+// Copyright 2013 Matthew Yates
 
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
@@ -71,7 +71,7 @@ func (d *digest) BlockSize() int { return 1 }
 
 // Add byte p to the digest and remove the byte
 // leaving the window
-func (d *digest) AddByte(inByte byte) {
+func (d *digest) addByte(inByte byte) {
 	// Replace the byte leaving the buffer with the incoming
 	// byte and advance the buffer
 	outByte := d.buffer.Value.(byte)
@@ -85,16 +85,14 @@ func (d *digest) AddByte(inByte byte) {
 	d.s2 %= mod
 }
 
-func (d *digest) AddBytes(inBytes []byte) {
+func (d *digest) AddByte(inBytes byte...) {
 	for _, b := range inBytes {
-		d.AddByte(b)
+		d.addByte(b)
 	}
 }
 
 func (d *digest) Write(p []byte) (n int, err error) {
-	for _, v := range p {
-		d.AddByte(v)
-	}
+	d.AddByte(p...)
 	return len(p), nil
 }
 
@@ -110,10 +108,7 @@ func Checksum(data []byte) uint32 {
 	d := new(digest)
 	d.windowSize = len(data)
 	d.Reset()
-
-	for _, v := range data {
-		d.AddByte(v)
-	}
+	d.AddByte(data...)
 
 	return d.Sum32()
 }
