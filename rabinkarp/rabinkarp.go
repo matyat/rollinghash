@@ -1,5 +1,3 @@
-// Copyright 2013 Mathew Yates
-
 package rabinkarp
 
 import (
